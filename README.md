@@ -1,8 +1,10 @@
 # Unbound Docker
 
+![Build Status](https://github.com/OwenElliottDev/unbound-docker/actions/workflows/docker-publish.yml/badge.svg)
+
 [Unbound](https://github.com/NLnetLabs/unbound) is a validating, recursive, caching DNS resolver.
 
-This repo is for a dockerised version of unbound with provides recursive resolution of domains. Unlike other alternatives this repo is actively maintained and builds unbound from source to be up to date with the latest security patches, it is also small at 35MB.
+This repo is for a dockerised version of unbound which provides recursive DNS resolutions. This container builds unbound from source and is kept up to date with the latest security patches, it is also small at 10MB when compressed.
 
 ## Running with Docker
 
@@ -44,9 +46,55 @@ networks:
     driver: bridge
 ```
 
+## Pi-Hole Example
+
+You can run unbound as a DNS server for Pi-Hole in Docker as follows:
+
+```yml
+services:
+  pihole:
+    container_name: pihole
+    image: pihole/pihole:latest
+    networks: # Addition of networks to the typical Pi-Hole compose
+      - unbound_dns
+      - default
+    ports:
+      - "53:53/tcp"
+      - "53:53/udp"
+      - "80:80/tcp"
+      - "443:443/tcp"
+    environment:
+      TZ: 'Europe/London'
+      FTLCONF_webserver_api_password: 'correct horse battery staple'
+      FTLCONF_dns_listeningMode: 'all'
+    volumes:
+      - './etc-pihole:/etc/pihole'
+    cap_add:
+      - NET_ADMIN
+      - SYS_TIME
+      - SYS_NICE
+    restart: unless-stopped
+  unbound:
+    container_name: unbound
+    image: owenelliottdev/unbound:latest
+    networks:
+      - unbound_dns
+    restart: unless-stopped
+
+networks:
+  unbound_dns:
+    driver: bridge
+```
+
+This isolates the network for unbound so you don't risk exposing it to anything other than services on the `unbound_dns` network, pihole functions as normal.
+
+Set your DNS in the Pi-Hole admin console to `unbound#5335`.
+
+More details on the Pi-Hole docker compose can be found [here](https://docs.pi-hole.net/docker/).
+
 ## Advanced Configuration
 
-There are a number of environment variables which can be customised in your docker run command or docker compose.
+There are a number of environment variables which can be customised in your docker run command or docker compose. Note that the defaults are not targeted towards small Raspberry Pi's, you may want to take influence from the [recommended configuration](https://docs.pi-hole.net/guides/dns/unbound/) for Pi-Hole to optimise performance.
 
 ### Threading and Performance
 
@@ -97,20 +145,6 @@ Recommendation: Set according to caching policies; 86400 seconds = 1 day.
 + `UNBOUND_CACHE_MIN_TTL=300`
 Minimum TTL (in seconds) for cached records. Records with shorter TTLs are retained for at least this period.
 Recommendation: Ensures frequently queried domains remain in cache for a minimum duration.
-
-### Access Control (LAN / Localhost)
-+`UNBOUND_ALLOW_LAN=no`
-Optionally enable access control for your LAN.
-  + `yes`: allows LAN access according to UNBOUND_LAN_SUBNET
-  + `no`: only localhost has access (default)
-
-+ `UNBOUND_LAN_SUBNET`
-Defines the subnet to allow LAN access, e.g., `192.168.1.0/24`.
-Only applied if `UNBOUND_ALLOW_LAN=yes`. Default Localhost Access:
-    ```
-    access-control: 127.0.0.1/32 allow
-    access-control: ::1/128 allow
-    ```
 
 
 ## Building the container for development
