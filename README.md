@@ -4,7 +4,7 @@
 
 [Unbound](https://github.com/NLnetLabs/unbound) is a validating, recursive, caching DNS resolver.
 
-This repo is for a dockerised version of unbound which provides recursive DNS resolutions. This container builds unbound from source and is kept up to date with the latest security patches, it is also small at 10MB when compressed.
+This repo is for a dockerised version of unbound which provides recursive DNS resolutions. This container builds unbound from source and is kept up to date with the latest security patches, it is also small at 7MB when compressed.
 
 ## Running with Docker
 
