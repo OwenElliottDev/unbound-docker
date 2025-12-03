@@ -3,7 +3,7 @@ FROM alpine:latest AS builder
 RUN apk add --no-cache build-base git libevent-dev openssl-dev expat-dev flex bison
 
 
-RUN git clone --branch release-1.24.1 https://github.com/NLnetLabs/unbound.git \
+RUN git clone --branch release-1.24.2 https://github.com/NLnetLabs/unbound.git \
     && cd unbound \
     && ./configure --with-libevent \
     && make \
